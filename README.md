@@ -1,108 +1,109 @@
-# AssetFlow – Enterprise Asset Management
+# AssetFlow
 
-AssetFlow is a comprehensive, production-grade enterprise asset management system. It allows organizations to track physical and digital assets across their lifecycle, handle resource bookings, manage allocations, schedule maintenance, and conduct detailed compliance audits.
+AssetFlow is an enterprise-grade asset management system designed to track physical and digital assets across their lifecycle. The platform provides comprehensive tools for managing resource allocations, scheduling maintenance, processing room and equipment bookings, and conducting regulatory compliance audits.
 
-## 🌟 Key Features
+## Key Features
 
-- **Asset Lifecycle Management**: Import, categorize, and track assets from acquisition to retirement.
-- **Resource Bookings**: Prevent scheduling conflicts with robust room and equipment booking functionality.
-- **Allocations & Transfers**: Assign assets to users or departments, track transfer history, and mandate condition checks upon return.
-- **Maintenance Operations**: Schedule preventive maintenance and log breakdown requests seamlessly.
-- **Audit & Compliance**: Perform digital audits, verify asset existence by location, and generate discrepancy reports.
-- **Role-Based Access Control**: Secure platform with granular permissions (Admin, Asset Manager, Standard User).
+- **Asset Lifecycle Management**: Import, categorize, and track assets from initial acquisition through to retirement.
+- **Resource Booking**: Mitigate scheduling conflicts with robust room and equipment booking functionality.
+- **Allocations and Transfers**: Assign assets to specific users or departments, maintain an immutable transfer history, and mandate condition checks upon return.
+- **Maintenance Operations**: Schedule preventive maintenance and efficiently manage ad-hoc breakdown requests.
+- **Audit and Compliance**: Perform digital audits, verify asset existence by physical location, and automatically generate discrepancy reports.
+- **Role-Based Access Control**: Secure platform operations with granular permissions, distinguishing between Administrators, Asset Managers, and Standard Users.
 
----
+## Architecture and Technology Stack
 
-## 🏗 Architecture & Tech Stack
+The system is constructed on a scalable three-tier architecture with strictly decoupled frontend and backend services.
 
-The system is built on a clean, scalable three-layer architecture with independent frontend and backend services.
+### Backend Infrastructure
+- **Runtime and Framework**: Node.js utilizing Express.js
+- **Database**: PostgreSQL (interfacing via the `pg` driver)
+- **Authentication**: Stateless JWT implementation secured via HttpOnly cookies to mitigate XSS vulnerabilities.
+- **Design Pattern**: Controller-Service-Model architecture featuring standardized, paginated API responses.
 
-### Backend (Node.js & Express)
-- **Framework**: Express.js
-- **Database**: PostgreSQL (via `pg` driver)
-- **Authentication**: JWT-based HttpOnly cookies (for enhanced XSS protection)
-- **Design Pattern**: Controller-Service-Model architecture with paginated API responses.
+### Frontend Application
+- **Framework**: Next.js 15 (App Router paradigm) with React 19
+- **Styling**: Tailwind CSS
+- **Data Fetching Strategy**: Server Actions and Server Components utilized to minimize client-side JavaScript execution.
+- **API Integration**: Centralized `lib/api.ts` client ensuring type-safe extraction of backend paginated envelopes.
 
-### Frontend (Next.js 15 App Router)
-- **Framework**: Next.js 15 (React 19)
-- **Styling**: Tailwind CSS with custom branding and glassmorphic UI elements.
-- **Data Fetching**: Server Actions & Server Components (zero unnecessary client-side JavaScript).
-- **API Client**: Centralized `lib/api.ts` ensuring type-safe access to backend paginated envelopes.
+## Getting Started
 
----
+### System Prerequisites
+- Node.js (v18.0.0 or higher recommended)
+- PostgreSQL (v12.0 or higher)
 
-## 🚀 Getting Started
+### Backend Configuration
 
-### Prerequisites
-- Node.js (v18 or higher recommended)
-- PostgreSQL (v12 or higher)
-
-### 1. Backend Setup
-
-1. Open a terminal and navigate to the `backend` directory:
+1. Navigate to the backend directory:
    ```bash
    cd backend
    ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
+
 3. Configure Environment Variables:
-   Create a `.env` file in the `backend` directory:
+   Create a `.env` file in the `backend` directory with the following parameters:
    ```env
    PORT=5000
    NODE_ENV=development
    CLIENT_URL=http://localhost:3000
 
-   # Database Settings
+   # Database Configuration
    DB_HOST=localhost
    DB_USER=postgres
-   DB_PASSWORD=your_password
+   DB_PASSWORD=your_secure_password
    DB_NAME=assetflow
    DB_PORT=5432
 
    # Security
-   JWT_SECRET=your_super_secret_jwt_key
+   JWT_SECRET=your_secure_jwt_secret_key
    ```
-4. Setup Database & Seed Data:
-   Ensure your PostgreSQL instance is running and you have created the `assetflow` database. Run the following to structure the tables and populate test data:
+
+4. Database Setup and Seeding:
+   Ensure your PostgreSQL instance is running and the `assetflow` database exists. Execute the following to structure the schema and populate initial test data:
    ```bash
    npm run db:setup
    npm run db:seed
    ```
-5. Start the Backend Server:
+
+5. Initialize the Server:
    ```bash
    npm run dev
    ```
-   *The backend will be available at `http://localhost:5000`.*
+   The backend service will be exposed at `http://localhost:5000`.
 
-### 2. Frontend Setup
+### Frontend Configuration
 
-1. Open a new terminal and navigate to the `frontend` directory:
+1. Navigate to the frontend directory:
    ```bash
    cd frontend
    ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
-   *(Note: Due to a Next.js 15 React versioning requirement with Recharts, if you encounter peer dependency issues, run `npm install --legacy-peer-deps`)*
+   *Note: Due to Next.js 15 React versioning requirements with certain visualization libraries (e.g., Recharts), execute `npm install --legacy-peer-deps` if peer dependency conflicts occur.*
+
 3. Configure Environment Variables:
    Create a `.env.local` file in the `frontend` directory:
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:5000/api
    ```
-4. Start the Frontend Server:
+
+4. Initialize the Application:
    ```bash
    npm run dev
    ```
-   *The frontend will be available at `http://localhost:3000`.*
+   The frontend interface will be accessible at `http://localhost:3000`.
 
----
+## API Structure Overview
 
-## 📖 API Structure Overview
-
-The backend uses a structured API design. Most list-based endpoints (`GET /assets`, `GET /users`, etc.) return a **paginated envelope** instead of a raw array:
+The backend employs a strictly typed, envelope-based API design. List-based endpoints (e.g., `GET /assets`, `GET /users`) return a paginated object rather than a raw array to facilitate scalable data retrieval:
 
 ```json
 {
@@ -120,22 +121,18 @@ The backend uses a structured API design. Most list-based endpoints (`GET /asset
 }
 ```
 
-The Next.js frontend handles these via the centralized `api.ts` module, which extracts the relevant arrays before passing them to the Server Components.
+The Next.js frontend processes these responses via the centralized `api.ts` module, mapping the nested arrays to corresponding Server Components to ensure runtime stability.
 
-## 🛠 Available Scripts
+## Available Scripts
 
-**Backend:**
-- `npm run dev`: Starts the server with Nodemon for hot-reloading.
-- `npm run start`: Starts the production server.
-- `npm run db:setup`: Initializes the PostgreSQL schema.
+### Backend Operations
+- `npm run dev`: Initializes the server with hot-reloading (Nodemon).
+- `npm run start`: Initializes the server for production deployment.
+- `npm run db:setup`: Executes SQL scripts to initialize the PostgreSQL schema.
 - `npm run db:seed`: Populates the database with initial dummy data.
 
-**Frontend:**
-- `npm run dev`: Starts the Next.js development server.
-- `npm run build`: Creates an optimized production build.
-- `npm run start`: Starts the production Next.js server.
-- `npm run lint`: Runs ESLint for code quality checks.
-
----
-
-*AssetFlow — Streamlining enterprise resources with precision.*
+### Frontend Operations
+- `npm run dev`: Initializes the Next.js development server.
+- `npm run build`: Compiles an optimized production build.
+- `npm run start`: Initializes the production Next.js server.
+- `npm run lint`: Executes ESLint for code quality assurance.
