@@ -4,7 +4,7 @@ import { getSession, getRole } from "@/lib/session";
 import Sidebar from "@/components/layout/Sidebar";
 
 export const metadata: Metadata = {
-  title: "Dashboard — Odoo Practice",
+  title: "Dashboard — AssetFlow",
 };
 
 export default async function DashboardLayout({

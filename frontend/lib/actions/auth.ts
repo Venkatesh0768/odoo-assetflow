@@ -53,9 +53,7 @@ export async function registerAction(
     result.data.user.id
   );
 
-  // Redirect based on role
-  const isAdmin = result.data.user.role === "admin";
-  redirect(isAdmin ? "/dashboard/users" : "/dashboard/profile");
+  redirect("/dashboard");
 }
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
@@ -86,9 +84,7 @@ export async function loginAction(
     result.data.user.id
   );
 
-  // Redirect based on role — admins go to users list, regular users go to profile
-  const isAdmin = result.data.user.role === "admin";
-  redirect(isAdmin ? "/dashboard/users" : "/dashboard/profile");
+  redirect("/dashboard");
 }
 
 // ─── Logout ────────────────────────────────────────────────────────────────────
