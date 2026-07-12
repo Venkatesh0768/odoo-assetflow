@@ -2,6 +2,12 @@
 
 AssetFlow is an enterprise-grade asset management system designed to track physical and digital assets across their lifecycle. The platform provides comprehensive tools for managing resource allocations, scheduling maintenance, processing room and equipment bookings, and conducting regulatory compliance audits.
 
+<img width="1600" height="705" alt="WhatsApp Image 2026-07-12 at 5 16 05 PM" src="https://github.com/user-attachments/assets/fee459f4-e308-4ebf-8f49-dcd4d962dc42" />
+<img width="1885" height="891" alt="image" src="https://github.com/user-attachments/assets/fd4469ee-edc3-4562-bbb9-afe7cd0abc2b" />
+<img width="1909" height="895" alt="image" src="https://github.com/user-attachments/assets/4db4bf29-3ca2-4bdb-b838-054f262262b8" />
+<img width="1800" height="896" alt="image" src="https://github.com/user-attachments/assets/8b7363ae-b443-4396-a349-95ff4b68d37a" />
+
+
 ## Key Features
 
 - **Asset Lifecycle Management**: Import, categorize, and track assets from initial acquisition through to retirement.
