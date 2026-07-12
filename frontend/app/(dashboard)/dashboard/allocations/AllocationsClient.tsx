@@ -5,7 +5,10 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
+
+const PAGE_SIZE = 10;
 import {
   createAllocationAction,
   createTransferAction,
@@ -223,14 +226,32 @@ function AllocationsTab({
 }) {
   const [showAllocForm, setShowAllocForm] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [page, setPage] = useState(1);
 
   const active = allocations.filter((a) => a.status === "active");
   const returned = allocations.filter((a) => a.status === "returned");
 
+  const filtered = filterStatus ? allocations.filter((a) => a.status === filterStatus) : allocations;
+  const pages = Math.ceil(filtered.length / PAGE_SIZE);
+  const slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">{active.length} active · {returned.length} returned</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-slate-500">{active.length} active · {returned.length} returned</p>
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="returned">Returned</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
         <Button size="sm" onClick={() => setShowAllocForm((v) => !v)}>
           {showAllocForm ? "Cancel" : "Allocate Asset"}
         </Button>
@@ -255,18 +276,24 @@ function AllocationsTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {allocations.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">No allocations yet.</td></tr>
+            {slice.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">No allocations found.</td></tr>
             ) : (
-              allocations.map((alloc) => (
+              slice.map((alloc) => {
+                const a = alloc as Allocation & {
+                  asset_name?: string; asset_tag?: string;
+                  allocated_to_name?: string; department_name?: string;
+                };
+                const assetLabel = a.asset?.name ?? a.asset_name ?? a.asset_id;
+                const tagLabel   = a.asset?.tag ?? a.asset_tag;
+                const assignedTo = a.user?.name ?? a.allocated_to_name ?? a.department?.name ?? a.department_name ?? "—";
+                return (
                 <tr key={alloc.id}>
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                    {alloc.asset?.name ?? alloc.asset_id}
-                    {alloc.asset?.tag && <span className="ml-1 font-mono text-xs text-slate-400">({alloc.asset.tag})</span>}
+                    {assetLabel}
+                    {tagLabel && <span className="ml-1 font-mono text-xs text-slate-400">({tagLabel})</span>}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
-                    {alloc.user?.name ?? alloc.department?.name ?? "—"}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{assignedTo}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     {alloc.expected_return_date
                       ? new Date(alloc.expected_return_date).toLocaleDateString()
@@ -275,7 +302,7 @@ function AllocationsTab({
                   <td className="px-4 py-3">
                     <Badge
                       label={alloc.status}
-                      variant={alloc.status === "active" ? "success" : "default"}
+                      variant={alloc.status === "active" ? "success" : alloc.status === "overdue" ? "danger" : "default"}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -297,10 +324,12 @@ function AllocationsTab({
                     )}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
+        <Pagination page={page} pages={pages} total={filtered.length} limit={PAGE_SIZE} onPageChange={setPage} />
       </div>
     </div>
   );
@@ -319,13 +348,17 @@ function TransfersTab({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [acting, startActing] = useTransition();
+  const [page, setPage] = useState(1);
   const { showToast } = useToast();
+
+  const pages = Math.ceil(transfers.length / PAGE_SIZE);
+  const slice = transfers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          {transfers.filter((t) => t.status === "pending").length} pending requests
+          {transfers.filter((t) => t.status === "pending" || t.status === "requested").length} pending requests
         </p>
         <Button size="sm" onClick={() => setShowForm((v) => !v)}>
           {showForm ? "Cancel" : "Request Transfer"}
@@ -350,21 +383,28 @@ function TransfersTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {transfers.length === 0 ? (
+            {slice.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">No transfer requests yet.</td></tr>
             ) : (
-              transfers.map((t) => (
+              slice.map((t) => {
+                const tr = t as Transfer & { asset_name?: string; asset_tag?: string; from_user_name?: string; to_user_name?: string };
+                return (
                 <tr key={t.id}>
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                    {t.asset?.name ?? t.asset_id}
+                    {t.asset?.name ?? tr.asset_name ?? t.asset_id}
+                    {(t.asset?.tag ?? tr.asset_tag) && (
+                      <span className="ml-1 font-mono text-xs text-slate-400">
+                        ({t.asset?.tag ?? tr.asset_tag})
+                      </span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{t.from_user_data?.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{t.to_user_data?.name ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{t.from_user_data?.name ?? tr.from_user_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{t.to_user_data?.name ?? tr.to_user_name ?? "—"}</td>
                   <td className="px-4 py-3">
                     <Badge label={t.status} variant={transferStatusVariant(t.status)} />
                   </td>
                   <td className="px-4 py-3">
-                    {t.status === "pending" && (
+                    {(t.status === "pending" || t.status === "requested") && (
                       <div className="flex gap-2">
                         <button
                           disabled={acting}
@@ -396,10 +436,12 @@ function TransfersTab({
                     )}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
+        <Pagination page={page} pages={pages} total={transfers.length} limit={PAGE_SIZE} onPageChange={setPage} />
       </div>
     </div>
   );

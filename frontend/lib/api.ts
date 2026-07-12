@@ -64,6 +64,33 @@ async function request<T>(
   return body;
 }
 
+// ─── Authenticated request with auto-refresh ───────────────────────────────────
+// Used by all server-action callers. On 401, attempts one silent refresh.
+
+export async function authedRequest<T>(
+  path: string,
+  init: RequestInit = {},
+  token: string
+): Promise<ApiResponse<T>> {
+  const result = await request<T>(path, init, token);
+  // Only attempt refresh server-side (where cookies are accessible)
+  if (result.success === false && (result as { statusCode?: number }).statusCode === 401) {
+    try {
+      const refreshRes = await request<AuthData>("/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (refreshRes.success && refreshRes.data?.accessToken) {
+        // Re-try with new token. The new refresh cookie is set by the backend.
+        return request<T>(path, init, refreshRes.data.accessToken);
+      }
+    } catch {
+      // Refresh failed – caller will get the original 401
+    }
+  }
+  return result;
+}
+
 // ─── Health ────────────────────────────────────────────────────────────────────
 
 export async function healthCheck(): Promise<ApiResponse<{ status: string }>> {

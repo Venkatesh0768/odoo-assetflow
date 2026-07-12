@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Pagination from "@/components/ui/Pagination";
 import {
   markNotificationReadAction,
   markAllReadAction,
   deleteNotificationAction,
 } from "@/lib/actions/notifications";
 import type { Notification, ActivityLogEntry, NotificationType } from "@/lib/types";
+
+const PAGE_SIZE = 10;
 
 interface Props {
   notifications: Notification[];
@@ -52,13 +55,11 @@ function NotifRow({ notif }: { notif: Notification }) {
   return (
     <div
       className={[
-        "group flex items-start justify-between gap-4 rounded-xl border px-4 py-3 transition-colors",
-        notif.is_read
-          ? "border-slate-100 bg-white"
-          : "border-slate-200 bg-white shadow-sm",
+        "group flex items-start justify-between gap-4 px-4 py-3 transition-colors hover:bg-slate-50/60",
+        !notif.is_read ? "border-l-2 border-indigo-500" : "border-l-2 border-transparent",
       ].join(" ")}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 min-w-0">
         <span
           className={[
             "mt-1.5 h-2 w-2 shrink-0 rounded-full",
@@ -66,29 +67,29 @@ function NotifRow({ notif }: { notif: Notification }) {
           ].join(" ")}
           aria-hidden="true"
         />
-        <div>
+        <div className="min-w-0">
           <p
             className={[
-              "text-sm",
+              "text-sm truncate",
               notif.is_read ? "text-slate-500" : "font-medium text-slate-900",
             ].join(" ")}
           >
             {notif.title}
           </p>
           {notif.message && notif.message !== notif.title && (
-            <p className="mt-0.5 text-xs text-slate-400">{notif.message}</p>
+            <p className="mt-0.5 text-xs text-slate-400 truncate">{notif.message}</p>
           )}
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <time className="text-xs text-slate-400">{timeAgo(notif.createdAt)}</time>
+        <time className="text-xs text-slate-400 whitespace-nowrap">{timeAgo(notif.createdAt)}</time>
         <div className="hidden gap-1 group-hover:flex">
           {!notif.is_read && (
             <button
               disabled={acting}
               onClick={() => startAct(() => markNotificationReadAction(notif.id))}
-              className="text-xs text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+              className="rounded px-1.5 py-0.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 disabled:opacity-50"
               aria-label="Mark as read"
             >
               ✓
@@ -97,8 +98,8 @@ function NotifRow({ notif }: { notif: Notification }) {
           <button
             disabled={acting}
             onClick={() => startAct(() => deleteNotificationAction(notif.id))}
-            className="text-xs text-rose-500 hover:text-rose-700 disabled:opacity-50"
-            aria-label="Delete notification"
+            className="rounded px-1.5 py-0.5 text-xs font-medium text-rose-500 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+            aria-label="Delete"
           >
             ✕
           </button>
@@ -111,15 +112,17 @@ function NotifRow({ notif }: { notif: Notification }) {
 // ─── Activity log row ─────────────────────────────────────────────────────────
 
 function ActivityRow({ entry }: { entry: ActivityLogEntry }) {
+  const userN = (entry as ActivityLogEntry & { user_name?: string }).user_name
+    ?? entry.performed_by_user?.name;
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-100 bg-white px-4 py-3">
-      <p className="text-sm text-slate-700">
+    <div className="flex items-start justify-between gap-4 px-4 py-3 hover:bg-slate-50/60 transition-colors">
+      <p className="text-sm text-slate-700 truncate max-w-lg">
         {entry.details ?? entry.action}
-        {entry.performed_by_user && (
-          <span className="text-slate-400"> · {entry.performed_by_user.name}</span>
+        {userN && (
+          <span className="ml-1 text-slate-400">· {userN}</span>
         )}
       </p>
-      <time className="shrink-0 text-xs text-slate-400">{timeAgo(entry.createdAt)}</time>
+      <time className="shrink-0 text-xs text-slate-400 whitespace-nowrap">{timeAgo(entry.createdAt)}</time>
     </div>
   );
 }
@@ -134,6 +137,8 @@ export default function NotificationsClient({
   const [filter, setFilter] = useState<Filter>("all");
   const [showActivity, setShowActivity] = useState(false);
   const [markingAll, startMarkAll] = useTransition();
+  const [notifPage, setNotifPage] = useState(1);
+  const [activityPage, setActivityPage] = useState(1);
 
   const unread = notifications.filter((n) => !n.is_read).length;
 
@@ -141,6 +146,14 @@ export default function NotificationsClient({
     filter === "all"
       ? notifications
       : notifications.filter((n) => n.type === filter);
+
+  const notifPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const notifSlice = filtered.slice((notifPage - 1) * PAGE_SIZE, notifPage * PAGE_SIZE);
+
+  const activityPages = Math.ceil(activityLog.length / PAGE_SIZE);
+  const activitySlice = activityLog.slice((activityPage - 1) * PAGE_SIZE, activityPage * PAGE_SIZE);
+
+  function handleFilterChange(key: Filter) { setFilter(key); setNotifPage(1); }
 
   return (
     <div className="flex flex-col gap-4">
@@ -150,7 +163,7 @@ export default function NotificationsClient({
           {FILTERS.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => setFilter(key)}
+              onClick={() => handleFilterChange(key)}
               className={[
                 "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                 filter === key
@@ -180,14 +193,27 @@ export default function NotificationsClient({
       </div>
 
       {/* Notification list */}
-      <div className="flex flex-col gap-2">
-        {filtered.length === 0 ? (
-          <p className="rounded-xl border border-slate-200 bg-white px-6 py-8 text-center text-sm text-slate-500">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {notifSlice.length === 0 ? (
+          <p className="px-6 py-8 text-center text-sm text-slate-500">
             {filter === "all" ? "No notifications." : `No ${filter} notifications.`}
           </p>
         ) : (
-          filtered.map((n) => <NotifRow key={n.id} notif={n} />)
+          <ul className="divide-y divide-slate-50">
+            {notifSlice.map((n) => (
+              <li key={n.id}>
+                <NotifRow notif={n} />
+              </li>
+            ))}
+          </ul>
         )}
+        <Pagination
+          page={notifPage}
+          pages={notifPages}
+          total={filtered.length}
+          limit={PAGE_SIZE}
+          onPageChange={setNotifPage}
+        />
       </div>
 
       {/* Activity log (admin only) */}
@@ -201,17 +227,30 @@ export default function NotificationsClient({
           </button>
 
           {showActivity && (
-            <div className="mt-3 flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Activity Log (Admin)
-              </p>
-              {activityLog.length === 0 ? (
-                <p className="text-sm text-slate-400">No activity recorded.</p>
+            <div className="mt-3 flex flex-col gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Activity Log
+                </p>
+              </div>
+              {activitySlice.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-slate-400">No activity recorded.</p>
               ) : (
-                activityLog.map((entry) => (
-                  <ActivityRow key={entry.id} entry={entry} />
-                ))
+                <ul className="divide-y divide-slate-50">
+                  {activitySlice.map((entry) => (
+                    <li key={entry.id}>
+                      <ActivityRow entry={entry} />
+                    </li>
+                  ))}
+                </ul>
               )}
+              <Pagination
+                page={activityPage}
+                pages={activityPages}
+                total={activityLog.length}
+                limit={PAGE_SIZE}
+                onPageChange={setActivityPage}
+              />
             </div>
           )}
         </div>

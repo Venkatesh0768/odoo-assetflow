@@ -135,7 +135,7 @@ async function DashboardContent() {
           <p className="px-6 py-5 text-sm text-slate-500">No recent activity.</p>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {activityLog.slice(0, 8).map((entry) => (
+            {activityLog.slice(0, 5).map((entry) => (
               <li
                 key={entry.id}
                 className="flex items-start justify-between gap-4 px-6 py-3"

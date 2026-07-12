@@ -6,9 +6,12 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { createAssetAction } from "@/lib/actions/assets";
 import type { Asset, Category, Department } from "@/lib/types";
+
+const PAGE_SIZE = 10;
 
 interface Props {
   assets: Asset[];
@@ -149,18 +152,26 @@ export default function AssetsClient({ assets, categories, departments }: Props)
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [page, setPage] = useState(1);
 
   const filtered = assets.filter((a) => {
+    const tag = (a as Asset & { asset_tag?: string }).asset_tag ?? a.tag ?? "";
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
       a.name.toLowerCase().includes(q) ||
-      (a.tag ?? "").toLowerCase().includes(q) ||
+      tag.toLowerCase().includes(q) ||
       (a.serial_number ?? "").toLowerCase().includes(q);
     const matchStatus = !filterStatus || a.status === filterStatus;
     const matchCategory = !filterCategory || a.category_id === filterCategory;
     return matchSearch && matchStatus && matchCategory;
   });
+
+  // Reset to page 1 on filter change
+  const pages = Math.ceil(filtered.length / PAGE_SIZE);
+  const slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function handleFilterChange(fn: () => void) { fn(); setPage(1); }
 
   const statuses = ["available", "allocated", "under_maintenance", "retired", "lost"];
 
@@ -185,7 +196,7 @@ export default function AssetsClient({ assets, categories, departments }: Props)
       <div className="flex flex-wrap gap-2">
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
+          onChange={(e) => handleFilterChange(() => setFilterStatus(e.target.value))}
           className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All Statuses</option>
@@ -195,7 +206,7 @@ export default function AssetsClient({ assets, categories, departments }: Props)
         </select>
         <select
           value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
+          onChange={(e) => handleFilterChange(() => setFilterCategory(e.target.value))}
           className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All Categories</option>
@@ -234,11 +245,11 @@ export default function AssetsClient({ assets, categories, departments }: Props)
                 </td>
               </tr>
             ) : (
-              filtered.map((asset) => (
+              slice.map((asset) => (
                 <tr key={asset.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-indigo-700">{asset.tag ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-indigo-700">{asset.tag ?? (asset as Asset & { asset_tag?: string }).asset_tag ?? "—"}</td>
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">{asset.name}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{asset.category?.name ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{asset.category?.name ?? (asset as Asset & { category_name?: string }).category_name ?? "—"}</td>
                   <td className="px-4 py-3">
                     <Badge label={statusLabel(asset.status)} variant={statusVariant(asset.status)} />
                   </td>
@@ -248,9 +259,13 @@ export default function AssetsClient({ assets, categories, departments }: Props)
             )}
           </tbody>
         </table>
-        <div className="border-t border-slate-100 px-4 py-2 text-xs text-slate-400">
-          Showing {filtered.length} of {assets.length} assets
-        </div>
+        <Pagination
+          page={page}
+          pages={pages}
+          total={filtered.length}
+          limit={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

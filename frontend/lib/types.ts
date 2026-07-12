@@ -149,7 +149,7 @@ export interface Transfer {
 
 // ─── Booking ───────────────────────────────────────────────────────────────────
 
-export type BookingStatus = "confirmed" | "cancelled";
+export type BookingStatus = "upcoming" | "ongoing" | "completed" | "cancelled" | "confirmed";
 
 export interface Booking {
   id: string;

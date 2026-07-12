@@ -50,3 +50,32 @@ export async function cancelBookingAction(
   await api.cancelBooking(id, reason, token);
   revalidatePath("/dashboard/bookings");
 }
+
+export async function rescheduleBookingAction(
+  id: string,
+  _prev: GenericFormState,
+  formData: FormData
+): Promise<GenericFormState> {
+  const token = await getSession();
+  if (!token) redirect("/login");
+
+  const start_time = (formData.get("start_time") as string)?.trim();
+  const end_time   = (formData.get("end_time")   as string)?.trim();
+  const purpose    = (formData.get("purpose")    as string)?.trim() || undefined;
+
+  const errors: Record<string, string[]> = {};
+  if (!start_time) errors.start_time = ["Start time is required."];
+  if (!end_time)   errors.end_time   = ["End time is required."];
+  if (start_time && end_time && start_time >= end_time)
+    errors.end_time = ["End time must be after start time."];
+  if (Object.keys(errors).length > 0) return { errors };
+
+  const result = await api.rescheduleBooking(id, { start_time, end_time, purpose }, token);
+
+  if (!result.success) {
+    return { message: result.message ?? "Reschedule failed. Slot may be unavailable." };
+  }
+
+  revalidatePath("/dashboard/bookings");
+  return { success: true, message: "Booking rescheduled." };
+}

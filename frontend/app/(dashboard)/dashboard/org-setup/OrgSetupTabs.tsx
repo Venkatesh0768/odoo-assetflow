@@ -143,8 +143,12 @@ function DepartmentsTab({ departments, users }: DepartmentsTabProps) {
               departments.map((dept) => (
                 <tr key={dept.id}>
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">{dept.name}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{dept.head?.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{dept.parent?.name ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {(dept as Department & { head_name?: string }).head_name ?? dept.head?.name ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {(dept as Department & { parent_name?: string }).parent_name ?? dept.parent?.name ?? "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <Badge
                       label={dept.status}
