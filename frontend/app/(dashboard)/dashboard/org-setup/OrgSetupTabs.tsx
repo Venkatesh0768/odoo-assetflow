@@ -11,6 +11,7 @@ import {
   toggleDepartmentStatusAction,
 } from "@/lib/actions/departments";
 import { createCategoryAction } from "@/lib/actions/categories";
+import { promoteUserAction, toggleUserStatusAction } from "@/lib/actions/users";
 import type { Department, Category, User } from "@/lib/types";
 
 type Tab = "departments" | "categories" | "employees";
@@ -201,39 +202,149 @@ function CategoriesTab({ categories }: { categories: Category[] }) {
 
 // ─── Employees tab ─────────────────────────────────────────────────────────────
 
+const ROLE_OPTIONS = [
+  { value: "employee", label: "Employee" },
+  { value: "department_head", label: "Department Head" },
+  { value: "asset_manager", label: "Asset Manager" },
+  { value: "admin", label: "Admin" },
+] as const;
+
+function roleBadgeVariant(role?: string): "default" | "success" | "warning" | "danger" {
+  if (role === "admin") return "success";
+  if (role === "asset_manager") return "warning";
+  if (role === "department_head") return "warning";
+  return "default";
+}
+
+function EmployeeRow({ user }: { user: User }) {
+  const [editing, setEditing] = useState(false);
+  const [toggling, startToggle] = useTransition();
+
+  const boundPromote = promoteUserAction.bind(null, user.id);
+  const [promoteState, promoteAction, promoting] = useActionState(
+    boundPromote,
+    undefined
+  );
+
+  // Close inline form on success
+  if (promoteState?.success && editing) setEditing(false);
+
+  return (
+    <>
+      <tr>
+        <td className="px-4 py-3 text-sm font-medium text-slate-900">
+          {user.name}
+        </td>
+        <td className="px-4 py-3 text-sm text-slate-600">{user.email}</td>
+        <td className="px-4 py-3 text-sm text-slate-500">
+          {(user as User & { department_name?: string }).department_name ?? "—"}
+        </td>
+        <td className="px-4 py-3">
+          <Badge
+            label={user.role ?? "employee"}
+            variant={roleBadgeVariant(user.role)}
+          />
+        </td>
+        <td className="px-4 py-3">
+          <Badge
+            label={user.is_active !== false ? "Active" : "Inactive"}
+            variant={user.is_active !== false ? "success" : "warning"}
+          />
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setEditing((v) => !v)}
+              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              {editing ? "Cancel" : "Change Role"}
+            </button>
+            <button
+              disabled={toggling}
+              onClick={() =>
+                startToggle(() =>
+                  toggleUserStatusAction(user.id, user.is_active === false)
+                )
+              }
+              className="text-xs font-medium text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors"
+            >
+              {user.is_active !== false ? "Deactivate" : "Activate"}
+            </button>
+          </div>
+        </td>
+      </tr>
+      {editing && (
+        <tr className="bg-indigo-50">
+          <td colSpan={6} className="px-4 py-3">
+            <form action={promoteAction} className="flex flex-wrap items-center gap-3">
+              <label className="text-xs font-medium text-slate-600">
+                New role for{" "}
+                <span className="font-semibold text-slate-800">{user.name}</span>:
+              </label>
+              <select
+                name="role"
+                defaultValue={user.role ?? "employee"}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <Button type="submit" size="sm" loading={promoting}>
+                {promoting ? "Saving…" : "Save Role"}
+              </Button>
+              {promoteState?.message && !promoteState.success && (
+                <span className="text-xs font-medium text-red-600">
+                  {promoteState.message}
+                </span>
+              )}
+            </form>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 function EmployeesTab({ users }: { users: User[] }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            {["Name", "Email", "Role", "Status"].map((h) => (
-              <th key={h} scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {users.length === 0 ? (
-            <tr><td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">No employees found.</td></tr>
-          ) : (
-            users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">{user.name}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{user.email}</td>
-                <td className="px-4 py-3">
-                  <Badge label={user.role ?? "employee"} variant={user.role === "admin" ? "success" : "default"} />
-                </td>
-                <td className="px-4 py-3">
-                  <Badge
-                    label={user.is_active !== false ? "Active" : "Inactive"}
-                    variant={user.is_active !== false ? "success" : "warning"}
-                  />
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-slate-500">
+        Role assignment is admin-only. Signup always creates an Employee account.
+      </p>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr>
+              {["Name", "Email", "Department", "Role", "Status", "Actions"].map((h) => (
+                <th
+                  key={h}
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {users.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-6 text-center text-sm text-slate-500"
+                >
+                  No employees found.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              users.map((user) => <EmployeeRow key={user.id} user={user} />)
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

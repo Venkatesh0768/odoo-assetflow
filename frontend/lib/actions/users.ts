@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import * as api from "@/lib/api";
 import { getSession, getRole, getUserId } from "@/lib/session";
-import type { UpdateUserFormState } from "@/lib/types";
+import type { UpdateUserFormState, GenericFormState } from "@/lib/types";
 
 // ─── Update user ───────────────────────────────────────────────────────────────
 // Admins can update any user. Regular users can only update themselves.
@@ -58,6 +58,60 @@ export async function updateUserAction(
   }
 
   return { success: true, message: "User updated successfully." };
+}
+
+// ─── Promote user role ─────────────────────────────────────────────────────────
+// Admin only. This is the only place roles are assigned (per spec Screen 3, Tab C).
+
+const VALID_ROLES = ["admin", "asset_manager", "department_head", "employee"] as const;
+type ValidRole = (typeof VALID_ROLES)[number];
+
+export async function promoteUserAction(
+  userId: string,
+  _prevState: GenericFormState,
+  formData: FormData
+): Promise<GenericFormState> {
+  const token = await getSession();
+  if (!token) redirect("/login");
+
+  const callerRole = await getRole();
+  if (callerRole !== "admin") {
+    return { message: "Only admins can change user roles." };
+  }
+
+  const newRole = (formData.get("role") as string | null)?.trim() as ValidRole | null;
+
+  if (!newRole || !VALID_ROLES.includes(newRole)) {
+    return {
+      errors: { role: [`Role must be one of: ${VALID_ROLES.join(", ")}`] },
+    };
+  }
+
+  const result = await api.promoteUser(userId, newRole, token);
+
+  if (!result.success) {
+    return {
+      message: result.message ?? "Role update failed. Please try again.",
+    };
+  }
+
+  return { success: true, message: `Role updated to "${newRole}" successfully.` };
+}
+
+// ─── Toggle user status ────────────────────────────────────────────────────────
+// Admin only.
+
+export async function toggleUserStatusAction(
+  userId: string,
+  isActive: boolean
+): Promise<void> {
+  const token = await getSession();
+  if (!token) redirect("/login");
+
+  const callerRole = await getRole();
+  if (callerRole !== "admin") redirect("/dashboard/profile");
+
+  await api.toggleUserStatus(userId, isActive, token);
 }
 
 // ─── Delete user ───────────────────────────────────────────────────────────────
