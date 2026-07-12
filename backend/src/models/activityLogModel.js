@@ -25,7 +25,10 @@ export const ActivityLogModel = {
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const { rows } = await query(
-      `SELECT al.*, u.name AS user_name, u.email AS user_email, u.role AS user_role
+      `SELECT al.id, al.user_id, al.action, al.entity_type AS entity, al.entity_id, 
+              al.description AS details, al.created_at AS "createdAt", al.metadata, al.ip_address,
+              u.name AS user_name, u.email AS user_email, u.role AS user_role,
+              u.id AS "performed_by"
        FROM activity_logs al
        LEFT JOIN users u ON u.id = al.user_id
        ${where}

@@ -23,6 +23,7 @@ export async function createDepartmentAction(
 
   const name = (formData.get("name") as string)?.trim();
   const description = (formData.get("description") as string)?.trim();
+  const head_id = (formData.get("head_id") as string)?.trim() || undefined;
   const parent_id = (formData.get("parent_id") as string)?.trim() || undefined;
 
   if (!name || name.length < 2) {
@@ -30,7 +31,7 @@ export async function createDepartmentAction(
   }
 
   const result = await api.createDepartment(
-    { name, description, parent_id, status: "active" },
+    { name, description, head_id, parent_id, status: "active" },
     token
   );
 

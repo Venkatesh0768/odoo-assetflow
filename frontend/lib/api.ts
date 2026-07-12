@@ -267,6 +267,7 @@ export async function createDepartment(
   payload: {
     name: string;
     description?: string;
+    head_id?: string;
     parent_id?: string;
     status?: string;
   },

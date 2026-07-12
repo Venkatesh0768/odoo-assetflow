@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useActionState } from "react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import { useToast } from "@/components/ui/Toast";
 import {
   createDepartmentAction,
   toggleDepartmentStatusAction,
@@ -19,6 +20,11 @@ type Tab = "departments" | "categories" | "employees";
 interface Props {
   departments: Department[];
   categories: Category[];
+  users: User[];
+}
+
+interface DepartmentsTabProps {
+  departments: Department[];
   users: User[];
 }
 
@@ -50,12 +56,20 @@ function TabBtn({
 
 // ─── Departments tab ───────────────────────────────────────────────────────────
 
-function DepartmentsTab({ departments }: { departments: Department[] }) {
+function DepartmentsTab({ departments, users }: DepartmentsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [state, action, pending] = useActionState(createDepartmentAction, undefined);
   const [toggling, startToggle] = useTransition();
+  const { showToast } = useToast();
 
-  if (state?.success && showForm) setShowForm(false);
+  useEffect(() => {
+    if (state?.success) {
+      showToast(state.message || "Department created successfully!", "success");
+      setShowForm(false);
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  }, [state, showToast]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,6 +89,36 @@ function DepartmentsTab({ departments }: { departments: Department[] }) {
           <form action={action} className="flex flex-col gap-3">
             <Input label="Name" name="name" required error={state?.errors?.name} />
             <Input label="Description" name="description" />
+            <div className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-slate-700">Department Head (optional)</span>
+                <select
+                  name="head_id"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">— No head assigned —</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-slate-700">Parent Department (optional)</span>
+                <select
+                  name="parent_id"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">— Top-level department —</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <div className="flex gap-2 pt-1">
               <Button type="submit" size="sm" loading={pending}>Create</Button>
               <Button type="button" variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
@@ -111,9 +155,13 @@ function DepartmentsTab({ departments }: { departments: Department[] }) {
                     <button
                       disabled={toggling}
                       onClick={() =>
-                        startToggle(() =>
-                          toggleDepartmentStatusAction(dept.id, dept.status !== "active")
-                        )
+                        startToggle(async () => {
+                          await toggleDepartmentStatusAction(dept.id, dept.status !== "active");
+                          showToast(
+                            `Department ${dept.status === "active" ? "deactivated" : "activated"}`,
+                            "success"
+                          );
+                        })
                       }
                       className="text-xs font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
                     >
@@ -138,8 +186,16 @@ function DepartmentsTab({ departments }: { departments: Department[] }) {
 function CategoriesTab({ categories }: { categories: Category[] }) {
   const [showForm, setShowForm] = useState(false);
   const [state, action, pending] = useActionState(createCategoryAction, undefined);
+  const { showToast } = useToast();
 
-  if (state?.success && showForm) setShowForm(false);
+  useEffect(() => {
+    if (state?.success) {
+      showToast(state.message || "Category created successfully!", "success");
+      setShowForm(false);
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  }, [state, showToast]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -219,6 +275,7 @@ function roleBadgeVariant(role?: string): "default" | "success" | "warning" | "d
 function EmployeeRow({ user }: { user: User }) {
   const [editing, setEditing] = useState(false);
   const [toggling, startToggle] = useTransition();
+  const { showToast } = useToast();
 
   const boundPromote = promoteUserAction.bind(null, user.id);
   const [promoteState, promoteAction, promoting] = useActionState(
@@ -226,8 +283,14 @@ function EmployeeRow({ user }: { user: User }) {
     undefined
   );
 
-  // Close inline form on success
-  if (promoteState?.success && editing) setEditing(false);
+  useEffect(() => {
+    if (promoteState?.success) {
+      showToast(promoteState.message || "Role updated successfully!", "success");
+      setEditing(false);
+    } else if (promoteState?.message && !promoteState.success) {
+      showToast(promoteState.message, "error");
+    }
+  }, [promoteState, showToast]);
 
   return (
     <>
@@ -262,9 +325,13 @@ function EmployeeRow({ user }: { user: User }) {
             <button
               disabled={toggling}
               onClick={() =>
-                startToggle(() =>
-                  toggleUserStatusAction(user.id, user.is_active === false)
-                )
+                startToggle(async () => {
+                  await toggleUserStatusAction(user.id, user.is_active === false);
+                  showToast(
+                    `User ${user.is_active !== false ? "deactivated" : "activated"}`,
+                    "success"
+                  );
+                })
               }
               className="text-xs font-medium text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors"
             >
@@ -364,7 +431,7 @@ export default function OrgSetupTabs({ departments, categories, users }: Props) 
       </div>
 
       {/* Tab content */}
-      {activeTab === "departments" && <DepartmentsTab departments={departments} />}
+      {activeTab === "departments" && <DepartmentsTab departments={departments} users={users} />}
       {activeTab === "categories" && <CategoriesTab categories={categories} />}
       {activeTab === "employees" && <EmployeesTab users={users} />}
     </div>

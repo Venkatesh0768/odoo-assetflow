@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import * as api from "@/lib/api";
 import { getSession, getRole, getUserId } from "@/lib/session";
 import type { UpdateUserFormState, GenericFormState } from "@/lib/types";
@@ -57,6 +58,8 @@ export async function updateUserAction(
     };
   }
 
+  revalidatePath("/dashboard/org-setup");
+  revalidatePath("/dashboard/profile");
   return { success: true, message: "User updated successfully." };
 }
 
@@ -95,6 +98,7 @@ export async function promoteUserAction(
     };
   }
 
+  revalidatePath("/dashboard/org-setup");
   return { success: true, message: `Role updated to "${newRole}" successfully.` };
 }
 
@@ -112,6 +116,7 @@ export async function toggleUserStatusAction(
   if (callerRole !== "admin") redirect("/dashboard/profile");
 
   await api.toggleUserStatus(userId, isActive, token);
+  revalidatePath("/dashboard/org-setup");
 }
 
 // ─── Delete user ───────────────────────────────────────────────────────────────

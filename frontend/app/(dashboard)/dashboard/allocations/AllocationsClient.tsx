@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition, useActionState } from "react";
+import { useState, useTransition, useActionState, useEffect } from "react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import { useToast } from "@/components/ui/Toast";
 import {
   createAllocationAction,
   createTransferAction,
@@ -44,9 +45,18 @@ function AllocateForm({
   onClose: () => void;
 }) {
   const [state, action, pending] = useActionState(createAllocationAction, undefined);
+  const { showToast } = useToast();
   const availableAssets = assets.filter((a) => a.status === "available");
 
-  if (state?.success) { onClose(); return null; }
+  useEffect(() => {
+    if (state?.success) {
+      showToast("Asset allocated successfully!", "success");
+      onClose();
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -104,9 +114,18 @@ function TransferForm({
   onClose: () => void;
 }) {
   const [state, action, pending] = useActionState(createTransferAction, undefined);
+  const { showToast } = useToast();
   const allocatedAssets = assets.filter((a) => a.status === "allocated");
 
-  if (state?.success) { onClose(); return null; }
+  useEffect(() => {
+    if (state?.success) {
+      showToast("Transfer request submitted!", "success");
+      onClose();
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -150,8 +169,17 @@ function TransferForm({
 function ReturnForm({ allocationId, onClose }: { allocationId: string; onClose: () => void }) {
   const action = returnAllocationAction.bind(null, allocationId);
   const [state, formAction, pending] = useActionState(action, undefined);
+  const { showToast } = useToast();
 
-  if (state?.success) { onClose(); return null; }
+  useEffect(() => {
+    if (state?.success) {
+      showToast("Asset returned successfully!", "success");
+      onClose();
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -291,6 +319,7 @@ function TransfersTab({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [acting, startActing] = useTransition();
+  const { showToast } = useToast();
 
   return (
     <div className="flex flex-col gap-4">
@@ -339,7 +368,12 @@ function TransfersTab({
                       <div className="flex gap-2">
                         <button
                           disabled={acting}
-                          onClick={() => startActing(() => approveTransferAction(t.id))}
+                          onClick={() =>
+                            startActing(async () => {
+                              await approveTransferAction(t.id);
+                              showToast("Transfer approved!", "success");
+                            })
+                          }
                           className="text-xs font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
                         >
                           Approve
@@ -348,7 +382,11 @@ function TransfersTab({
                           disabled={acting}
                           onClick={() => {
                             const reason = prompt("Rejection reason:");
-                            if (reason) startActing(() => rejectTransferAction(t.id, reason));
+                            if (reason)
+                              startActing(async () => {
+                                await rejectTransferAction(t.id, reason);
+                                showToast("Transfer rejected.", "warning");
+                              });
                           }}
                           className="text-xs font-medium text-rose-600 hover:text-rose-800 disabled:opacity-50"
                         >

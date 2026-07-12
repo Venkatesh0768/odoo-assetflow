@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import { useToast } from "@/components/ui/Toast";
 import { createAssetAction } from "@/lib/actions/assets";
 import type { Asset, Category, Department } from "@/lib/types";
 
@@ -39,11 +40,17 @@ function RegisterAssetForm({
   onClose: () => void;
 }) {
   const [state, action, pending] = useActionState(createAssetAction, undefined);
+  const { showToast } = useToast();
 
-  if (state?.success) {
-    onClose();
-    return null;
-  }
+  useEffect(() => {
+    if (state?.success) {
+      showToast("Asset registered successfully!", "success");
+      onClose();
+    } else if (state?.message && !state.success) {
+      showToast(state.message, "error");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
