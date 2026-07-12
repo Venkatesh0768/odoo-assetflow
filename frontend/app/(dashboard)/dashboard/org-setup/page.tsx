@@ -33,7 +33,7 @@ async function OrgSetupData() {
 
   const users: User[] =
     usersRes.status === "fulfilled" && usersRes.value.success
-      ? usersRes.value.data ?? []
+      ? usersRes.value.data?.employees ?? []
       : [];
 
   return (

@@ -39,7 +39,7 @@ async function ReportsData() {
 
   const maintenanceDue: MaintenanceDueItem[] =
     dueRes.status === "fulfilled" && dueRes.value.success
-      ? dueRes.value.data ?? []
+      ? (dueRes.value.data as { maintenance_due?: MaintenanceDueItem[] })?.maintenance_due ?? []
       : [];
 
   const mostUsed: AssetUsageEntry[] =

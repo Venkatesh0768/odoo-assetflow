@@ -25,12 +25,12 @@ async function NotificationsData() {
 
   const notifications: Notification[] =
     notifsRes.status === "fulfilled" && notifsRes.value.success
-      ? notifsRes.value.data ?? []
+      ? notifsRes.value.data?.notifications ?? []
       : [];
 
   const activityLog: ActivityLogEntry[] =
     activityRes.status === "fulfilled" && activityRes.value.success
-      ? (activityRes.value.data as ActivityLogEntry[]) ?? []
+      ? (activityRes.value.data as { logs?: ActivityLogEntry[] })?.logs ?? []
       : [];
 
   return (

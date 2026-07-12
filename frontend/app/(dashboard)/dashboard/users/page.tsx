@@ -24,7 +24,9 @@ async function UsersData() {
     );
   }
 
-  return <UsersTable users={result.data} />;
+  // Backend returns { employees: User[], pagination: {...} }
+  const users = result.data.employees ?? [];
+  return <UsersTable users={users} />;
 }
 
 function UsersTableSkeleton() {

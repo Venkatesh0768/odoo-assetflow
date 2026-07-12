@@ -9,17 +9,17 @@ router.use(authenticate);
 
 router.get('/', BookingController.getAll);
 
-router.get('/:id',
-  param('id').isUUID(),
-  validate,
-  BookingController.getById
-);
-
-/* Calendar view for a specific bookable asset */
+/* Calendar view for a specific bookable asset — MUST be before /:id */
 router.get('/calendar/:id',
   param('id').isUUID(),
   validate,
   BookingController.getCalendar
+);
+
+router.get('/:id',
+  param('id').isUUID(),
+  validate,
+  BookingController.getById
 );
 
 router.post('/',

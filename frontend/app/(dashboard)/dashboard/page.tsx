@@ -63,95 +63,59 @@ async function DashboardContent() {
   const token = await getSession();
   if (!token) redirect("/login");
 
-  // Fetch data in parallel — gracefully degrade on error
-  const [assetsRes, allocRes, transferRes, bookingsRes, activityRes] =
-    await Promise.allSettled([
-      api.getAllAssets(token),
-      api.getAllAllocations(token),
-      api.getAllTransfers(token),
-      api.getAllBookings(token),
-      api.getActivityLog(token, { limit: 10 }),
-    ]);
+  // Single efficient call to the dedicated dashboard endpoint
+  const dashRes = await api.getDashboard(token);
 
-  const assets =
-    assetsRes.status === "fulfilled" && assetsRes.value.success
-      ? assetsRes.value.data ?? []
-      : [];
+  const kpis = dashRes.success && dashRes.data
+    ? dashRes.data.kpis
+    : {
+        assets_available: 0,
+        assets_allocated: 0,
+        assets_under_maintenance: 0,
+        assets_retired: 0,
+        assets_lost: 0,
+        total_assets: 0,
+        maintenance_today: 0,
+        pending_maintenance: 0,
+        active_bookings: 0,
+        pending_transfers: 0,
+        upcoming_returns: 0,
+        overdue_returns: 0,
+      };
 
-  const allocations =
-    allocRes.status === "fulfilled" && allocRes.value.success
-      ? allocRes.value.data ?? []
-      : [];
+  const activityLog: ActivityLogEntry[] =
+    dashRes.success && dashRes.data ? dashRes.data.recent_activity ?? [] : [];
 
-  const transfers =
-    transferRes.status === "fulfilled" && transferRes.value.success
-      ? transferRes.value.data ?? []
-      : [];
-
-  const bookings =
-    bookingsRes.status === "fulfilled" && bookingsRes.value.success
-      ? bookingsRes.value.data ?? []
-      : [];
-
-  const activityLog =
-    activityRes.status === "fulfilled" && activityRes.value.success
-      ? (activityRes.value.data as ActivityLogEntry[]) ?? []
-      : [];
-
-  // Derived stats
-  const available = assets.filter((a) => a.status === "available").length;
-  const allocated = assets.filter((a) => a.status === "allocated").length;
-  const bookableAvail = assets.filter(
-    (a) => a.is_bookable && a.status === "available"
-  ).length;
-
-  const activeBookings = bookings.filter(
-    (b) => b.status === "confirmed"
-  ).length;
-
-  const pendingTransfers = transfers.filter(
-    (t) => t.status === "pending"
-  ).length;
-
-  const now = new Date();
-  const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const upcomingReturns = allocations.filter((a) => {
-    if (a.status !== "active" || !a.expected_return_date) return false;
-    const d = new Date(a.expected_return_date);
-    return d >= now && d <= sevenDays;
-  }).length;
-
-  const overdueReturns = allocations.filter((a) => {
-    if (a.status !== "active" || !a.expected_return_date) return false;
-    return new Date(a.expected_return_date) < now;
-  }).length;
+  const recentAllocations =
+    dashRes.success && dashRes.data ? dashRes.data.recent_allocations ?? [] : [];
 
   return (
     <div className="flex flex-col gap-6">
       {/* Overdue alert */}
-      {overdueReturns > 0 && (
+      {kpis.overdue_returns > 0 && (
         <div
           role="alert"
           className="rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800"
         >
-          ⚠ {overdueReturns} asset{overdueReturns > 1 ? "s" : ""} overdue for
+          ⚠ {kpis.overdue_returns} asset{kpis.overdue_returns > 1 ? "s" : ""} overdue for
           return — flagged for follow-up
         </div>
       )}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <StatCard label="Available" value={available} />
-        <StatCard label="Allocated" value={allocated} />
-        <StatCard label="Bookable Available" value={bookableAvail} />
-        <StatCard label="Active Bookings" value={activeBookings} />
-        <StatCard label="Pending Transfers" value={pendingTransfers} />
+        <StatCard label="Available"          value={kpis.assets_available} />
+        <StatCard label="Allocated"           value={kpis.assets_allocated} />
+        <StatCard label="Under Maintenance"   value={kpis.assets_under_maintenance} />
+        <StatCard label="Active Bookings"     value={kpis.active_bookings} />
+        <StatCard label="Pending Transfers"   value={kpis.pending_transfers} />
         <StatCard
           label="Upcoming Returns"
-          value={upcomingReturns}
-          highlight={upcomingReturns > 0}
+          value={kpis.upcoming_returns}
+          highlight={kpis.upcoming_returns > 0}
         />
       </div>
+
 
       {/* Quick actions */}
       <div className="flex flex-wrap gap-3">

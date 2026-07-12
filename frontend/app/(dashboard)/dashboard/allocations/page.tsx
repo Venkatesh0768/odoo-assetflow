@@ -26,7 +26,7 @@ async function AllocationsData() {
 
   const allocations: Allocation[] =
     allocRes.status === "fulfilled" && allocRes.value.success
-      ? allocRes.value.data ?? []
+      ? allocRes.value.data?.allocations ?? []
       : [];
 
   const transfers: Transfer[] =
@@ -36,12 +36,12 @@ async function AllocationsData() {
 
   const assets: Asset[] =
     assetsRes.status === "fulfilled" && assetsRes.value.success
-      ? assetsRes.value.data ?? []
+      ? assetsRes.value.data?.assets ?? []
       : [];
 
   const users: User[] =
     usersRes.status === "fulfilled" && usersRes.value.success
-      ? usersRes.value.data ?? []
+      ? usersRes.value.data?.employees ?? []
       : [];
 
   const departments: Department[] =

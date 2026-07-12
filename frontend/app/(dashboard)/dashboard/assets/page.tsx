@@ -23,7 +23,7 @@ async function AssetsData() {
 
   const assets: Asset[] =
     assetsRes.status === "fulfilled" && assetsRes.value.success
-      ? assetsRes.value.data ?? []
+      ? assetsRes.value.data?.assets ?? []
       : [];
 
   const categories: Category[] =

@@ -23,17 +23,17 @@ async function MaintenanceData() {
 
   const requests: MaintenanceRequest[] =
     maintRes.status === "fulfilled" && maintRes.value.success
-      ? maintRes.value.data ?? []
+      ? maintRes.value.data?.requests ?? []
       : [];
 
   const assets: Asset[] =
     assetsRes.status === "fulfilled" && assetsRes.value.success
-      ? assetsRes.value.data ?? []
+      ? assetsRes.value.data?.assets ?? []
       : [];
 
   const users: User[] =
     usersRes.status === "fulfilled" && usersRes.value.success
-      ? usersRes.value.data ?? []
+      ? usersRes.value.data?.employees ?? []
       : [];
 
   return <MaintenanceClient requests={requests} assets={assets} users={users} />;

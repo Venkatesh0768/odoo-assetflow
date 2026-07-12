@@ -23,12 +23,12 @@ async function BookingsData() {
 
   const bookings: Booking[] =
     bookingsRes.status === "fulfilled" && bookingsRes.value.success
-      ? bookingsRes.value.data ?? []
+      ? bookingsRes.value.data?.bookings ?? []
       : [];
 
   const assets: Asset[] =
     assetsRes.status === "fulfilled" && assetsRes.value.success
-      ? (assetsRes.value.data ?? []).filter((a) => a.is_bookable)
+      ? (assetsRes.value.data?.assets ?? []).filter((a) => a.is_bookable)
       : [];
 
   const departments: Department[] =

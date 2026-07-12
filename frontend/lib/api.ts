@@ -70,6 +70,64 @@ export async function healthCheck(): Promise<ApiResponse<{ status: string }>> {
   return request("/health");
 }
 
+// ─── Dashboard ─────────────────────────────────────────────────────────────────
+
+export interface DashboardKPIs {
+  assets_available: number;
+  assets_allocated: number;
+  assets_under_maintenance: number;
+  assets_retired: number;
+  assets_lost: number;
+  total_assets: number;
+  maintenance_today: number;
+  pending_maintenance: number;
+  active_bookings: number;
+  pending_transfers: number;
+  upcoming_returns: number;
+  overdue_returns: number;
+}
+
+export interface DashboardFull {
+  kpis: DashboardKPIs;
+  top_categories: { name: string; asset_count: number }[];
+  recent_allocations: {
+    id: string;
+    asset_tag: string;
+    asset_name: string;
+    allocated_to: string;
+    created_at: string;
+    expected_return_date: string | null;
+    status: string;
+  }[];
+  recent_activity: ActivityLogEntry[];
+}
+
+/** Full dashboard in one request — preferred over multiple parallel calls */
+export async function getDashboard(
+  token: string
+): Promise<ApiResponse<DashboardFull>> {
+  return request<DashboardFull>("/dashboard", {}, token);
+}
+
+/** Lightweight KPI-only refresh */
+export async function getDashboardKPIs(
+  token: string
+): Promise<ApiResponse<DashboardKPIs>> {
+  return request<DashboardKPIs>("/dashboard/kpis", {}, token);
+}
+
+/** Recent activity log (admin / asset_manager only) */
+export async function getDashboardActivity(
+  token: string,
+  limit = 20
+): Promise<ApiResponse<ActivityLogEntry[]>> {
+  return request<ActivityLogEntry[]>(
+    `/dashboard/activity?limit=${limit}`,
+    {},
+    token
+  );
+}
+
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
 export async function register(
@@ -118,13 +176,20 @@ export async function logoutAll(token: string): Promise<ApiResponse<null>> {
 
 export async function getAllUsers(
   token: string,
-  params?: { limit?: number; offset?: number }
-): Promise<ApiResponse<User[]>> {
+  params?: { limit?: number; offset?: number; page?: number; role?: string; search?: string }
+): Promise<ApiResponse<{ employees: User[]; pagination: { page: number; limit: number; total: number; pages: number } }>> {
   const qs = new URLSearchParams();
-  if (params?.limit) qs.set("limit", String(params.limit));
+  if (params?.limit)  qs.set("limit",  String(params.limit));
   if (params?.offset) qs.set("offset", String(params.offset));
+  if (params?.page)   qs.set("page",   String(params.page));
+  if (params?.role)   qs.set("role",   params.role);
+  if (params?.search) qs.set("search", params.search);
   const q = qs.toString();
-  return request<User[]>(`/users${q ? `?${q}` : ""}`, {}, token);
+  return request<{ employees: User[]; pagination: { page: number; limit: number; total: number; pages: number } }>(
+    `/users${q ? `?${q}` : ""}`,
+    {},
+    token
+  );
 }
 
 export async function getMyProfile(
@@ -298,26 +363,35 @@ export async function updateCategory(
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
 
+export interface AssetPage {
+  assets: Asset[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getAllAssets(
   token: string,
   params?: {
     limit?: number;
     offset?: number;
+    page?: number;
     status?: string;
-    category?: string;
+    category_id?: string;
     search?: string;
     location?: string;
+    is_bookable?: boolean;
   }
-): Promise<ApiResponse<Asset[]>> {
+): Promise<ApiResponse<AssetPage>> {
   const qs = new URLSearchParams();
-  if (params?.limit) qs.set("limit", String(params.limit));
-  if (params?.offset) qs.set("offset", String(params.offset));
-  if (params?.status) qs.set("status", params.status);
-  if (params?.category) qs.set("category", params.category);
-  if (params?.search) qs.set("search", params.search);
-  if (params?.location) qs.set("location", params.location);
+  if (params?.limit)      qs.set("limit",       String(params.limit));
+  if (params?.offset)     qs.set("offset",      String(params.offset));
+  if (params?.page)       qs.set("page",        String(params.page));
+  if (params?.status)     qs.set("status",      params.status);
+  if (params?.category_id) qs.set("category_id", params.category_id);
+  if (params?.search)     qs.set("search",      params.search);
+  if (params?.location)   qs.set("location",    params.location);
+  if (params?.is_bookable !== undefined) qs.set("is_bookable", String(params.is_bookable));
   const q = qs.toString();
-  return request<Asset[]>(`/assets${q ? `?${q}` : ""}`, {}, token);
+  return request<AssetPage>(`/assets${q ? `?${q}` : ""}`, {}, token);
 }
 
 export async function getAssetById(
@@ -389,10 +463,21 @@ export async function updateAssetStatus(
 
 // ─── Allocations ───────────────────────────────────────────────────────────────
 
+export interface AllocationPage {
+  allocations: Allocation[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getAllAllocations(
-  token: string
-): Promise<ApiResponse<Allocation[]>> {
-  return request<Allocation[]>("/allocations", {}, token);
+  token: string,
+  params?: { page?: number; limit?: number; status?: string }
+): Promise<ApiResponse<AllocationPage>> {
+  const qs = new URLSearchParams();
+  if (params?.page)   qs.set("page",   String(params.page));
+  if (params?.limit)  qs.set("limit",  String(params.limit));
+  if (params?.status) qs.set("status", params.status);
+  const q = qs.toString();
+  return request<AllocationPage>(`/allocations${q ? `?${q}` : ""}`, {}, token);
 }
 
 export async function getAllocationById(
@@ -481,10 +566,22 @@ export async function rejectTransfer(
 
 // ─── Bookings ──────────────────────────────────────────────────────────────────
 
+export interface BookingPage {
+  bookings: Booking[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getAllBookings(
-  token: string
-): Promise<ApiResponse<Booking[]>> {
-  return request<Booking[]>("/bookings", {}, token);
+  token: string,
+  params?: { page?: number; limit?: number; status?: string; asset_id?: string }
+): Promise<ApiResponse<BookingPage>> {
+  const qs = new URLSearchParams();
+  if (params?.page)     qs.set("page",     String(params.page));
+  if (params?.limit)    qs.set("limit",    String(params.limit));
+  if (params?.status)   qs.set("status",   params.status);
+  if (params?.asset_id) qs.set("asset_id", params.asset_id);
+  const q = qs.toString();
+  return request<BookingPage>(`/bookings${q ? `?${q}` : ""}`, {}, token);
 }
 
 export async function getBookingById(
@@ -544,10 +641,22 @@ export async function cancelBooking(
 
 // ─── Maintenance ───────────────────────────────────────────────────────────────
 
+export interface MaintenancePage {
+  requests: MaintenanceRequest[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getAllMaintenance(
-  token: string
-): Promise<ApiResponse<MaintenanceRequest[]>> {
-  return request<MaintenanceRequest[]>("/maintenance", {}, token);
+  token: string,
+  params?: { page?: number; limit?: number; status?: string; priority?: string }
+): Promise<ApiResponse<MaintenancePage>> {
+  const qs = new URLSearchParams();
+  if (params?.page)     qs.set("page",     String(params.page));
+  if (params?.limit)    qs.set("limit",    String(params.limit));
+  if (params?.status)   qs.set("status",   params.status);
+  if (params?.priority) qs.set("priority", params.priority);
+  const q = qs.toString();
+  return request<MaintenancePage>(`/maintenance${q ? `?${q}` : ""}`, {}, token);
 }
 
 export async function getMaintenanceById(
@@ -794,10 +903,22 @@ export async function getAssetUsage(
 
 // ─── Notifications ─────────────────────────────────────────────────────────────
 
+export interface NotificationPage {
+  notifications: Notification[];
+  unread_count: number;
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getNotifications(
-  token: string
-): Promise<ApiResponse<Notification[]>> {
-  return request<Notification[]>("/notifications", {}, token);
+  token: string,
+  params?: { page?: number; limit?: number; is_read?: boolean }
+): Promise<ApiResponse<NotificationPage>> {
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined)    qs.set("page",    String(params.page));
+  if (params?.limit !== undefined)   qs.set("limit",   String(params.limit));
+  if (params?.is_read !== undefined) qs.set("is_read", String(params.is_read));
+  const q = qs.toString();
+  return request<NotificationPage>(`/notifications${q ? `?${q}` : ""}`, {}, token);
 }
 
 export async function markNotificationRead(
@@ -832,15 +953,21 @@ export async function deleteNotification(
   );
 }
 
+export interface ActivityLogPage {
+  logs: ActivityLogEntry[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 export async function getActivityLog(
   token: string,
-  params?: { limit?: number; offset?: number }
-): Promise<ApiResponse<ActivityLogEntry[]>> {
+  params?: { limit?: number; offset?: number; page?: number }
+): Promise<ApiResponse<ActivityLogPage>> {
   const qs = new URLSearchParams();
-  if (params?.limit) qs.set("limit", String(params.limit));
+  if (params?.limit)  qs.set("limit",  String(params.limit));
   if (params?.offset) qs.set("offset", String(params.offset));
+  if (params?.page)   qs.set("page",   String(params.page));
   const q = qs.toString();
-  return request<ActivityLogEntry[]>(
+  return request<ActivityLogPage>(
     `/notifications/activity-log${q ? `?${q}` : ""}`,
     {},
     token
