@@ -136,3 +136,107 @@ The Next.js frontend processes these responses via the centralized `api.ts` modu
 - `npm run build`: Compiles an optimized production build.
 - `npm run start`: Initializes the production Next.js server.
 - `npm run lint`: Executes ESLint for code quality assurance.
+
+---
+
+## Docker Setup
+
+The entire stack (PostgreSQL, Express API, Next.js) runs in Docker Compose with a single command.
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Compose v2)
+
+### Quick Start
+
+```bash
+# 1. Copy and configure environment variables
+cp .env.example .env
+# Edit .env and set strong secrets for production
+
+# 2. Build images and start all services
+docker compose up --build
+
+# 3. (First run only) Seed the database with demo data
+docker compose exec backend node src/database/seed.js
+
+# 4. Open the app
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000/api/health
+# PostgreSQL: localhost:5432
+```
+
+### Login Credentials (after seed)
+
+| Email | Password | Role |
+|---|---|---|
+| admin@assetflow.com | Admin@1234 | Admin |
+| alice@assetflow.com | Manager@1234 | Asset Manager |
+| bob@assetflow.com | Head@1234 | Department Head |
+| carol@assetflow.com | Employee@1234 | Employee |
+
+### Service Architecture
+
+```
+Browser
+  │
+  ▼ :3000
+┌──────────────┐     internal Docker network     ┌──────────────┐
+│   frontend   │  ──── http://backend:5000/api ──▶│   backend    │
+│  (Next.js)   │                                  │  (Express)   │
+└──────────────┘                                  └──────┬───────┘
+                                                         │
+                                                         ▼ :5432
+                                                  ┌──────────────┐
+                                                  │   postgres   │
+                                                  │  (PG 16)     │
+                                                  └──────────────┘
+```
+
+### Common Commands
+
+```bash
+# Start (background)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Stop (keep data)
+docker compose down
+
+# Full reset (wipe database volume)
+docker compose down -v
+
+# Rebuild a single service after code changes
+docker compose up --build backend
+
+# Open a psql shell
+docker compose exec postgres psql -U assetflow -d assetflow_db
+
+# Run migrations manually (if needed)
+docker compose exec backend node src/database/migrate.js
+```
+
+### Environment Variables
+
+All variables are documented in `.env.example`. The key ones are:
+
+| Variable | Description |
+|---|---|
+| `POSTGRES_PASSWORD` | Database password |
+| `JWT_ACCESS_SECRET` | JWT signing secret (≥32 chars) |
+| `JWT_REFRESH_SECRET` | JWT refresh secret (≥32 chars, different from above) |
+| `COOKIE_SECRET` | Cookie signing secret (≥32 chars) |
+| `NEXT_PUBLIC_API_BASE_URL` | API URL baked into the Next.js build |
+
+> **Security**: Always change the default secrets before deploying to any shared environment.
+
+### Port Mapping
+
+| Service | Container Port | Host Port |
+|---|---|---|
+| Frontend | 3000 | 3000 |
+| Backend | 5000 | 5000 |
+| PostgreSQL | 5432 | 5432 |

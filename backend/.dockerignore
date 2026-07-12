@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.*
+!.env.example
+dist
+logs
+*.log
+.git
+.gitignore
+README.md
+postman_collection.json
+Dockerfile
+.dockerignore

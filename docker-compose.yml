@@ -1,0 +1,172 @@
+###############################################################################
+# AssetFlow – Docker Compose
+#
+# Services:
+#   postgres  – PostgreSQL 16 (schema auto-created on first boot)
+#   backend   – Express + pg API server (Node 20)
+#   frontend  – Next.js 15 standalone server (Node 20)
+#
+# Usage:
+#   First run (build + start + seed):
+#     docker compose up --build
+#     docker compose exec backend node src/database/seed.js
+#
+#   Subsequent starts (no rebuild):
+#     docker compose up
+#
+#   Tear down (keep data volume):
+#     docker compose down
+#
+#   Full reset (delete data too):
+#     docker compose down -v
+###############################################################################
+
+name: assetflow
+
+# ── Shared network ────────────────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:        # Persistent database storage
+  backend_logs:         # Winston log files
+
+###############################################################################
+# Services
+###############################################################################
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: assetflow-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-assetflow_db}
+      POSTGRES_USER:     ${POSTGRES_USER:-assetflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-assetflow_secret}
+      # Speed up fsync in development (remove in production for data safety)
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+
+    volumes:
+      # Persist data across restarts
+      - postgres_data:/var/lib/postgresql/data
+      # Schema is executed automatically on the very first container start
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+    ports:
+      # Expose on localhost so you can connect with pgAdmin / psql directly
+      - "5432:5432"
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-assetflow} -d ${POSTGRES_DB:-assetflow_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Backend (Express API) ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: assetflow-backend
+    restart: unless-stopped
+
+    # Wait for Postgres to be healthy before starting
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5000
+
+      # ── Database ──────────────────────────────────────────────────
+      # "postgres" is the service name — Docker DNS resolves it automatically
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     ${POSTGRES_DB:-assetflow_db}
+      DB_USER:     ${POSTGRES_USER:-assetflow}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-assetflow_secret}
+      DB_POOL_MIN: 2
+      DB_POOL_MAX: 10
+
+      # ── JWT (CHANGE THESE in production!) ─────────────────────────
+      JWT_ACCESS_SECRET:    ${JWT_ACCESS_SECRET:-change_me_access_secret_min_32_chars}
+      JWT_REFRESH_SECRET:   ${JWT_REFRESH_SECRET:-change_me_refresh_secret_min_32_chars}
+      JWT_ACCESS_EXPIRES_IN:  ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+
+      # ── CORS ──────────────────────────────────────────────────────
+      # Allow requests from the frontend container and localhost dev
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+
+      # ── Cookie ────────────────────────────────────────────────────
+      COOKIE_SECRET: ${COOKIE_SECRET:-change_me_cookie_secret_min_32_chars}
+
+      # ── Rate limiting ──────────────────────────────────────────────
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX:       ${RATE_LIMIT_MAX:-100}
+
+    volumes:
+      # Persist Winston log files outside the container
+      - backend_logs:/app/logs
+
+    ports:
+      - "5000:5000"
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Frontend (Next.js) ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # This URL is baked into the Next.js bundle at build time.
+        # For the browser to reach the backend it must be the PUBLIC address.
+        # In this compose setup the backend is accessed server-side via
+        # the internal Docker network, so we use the service name.
+        # If you expose the backend on a public domain, change this.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend:5000/api}
+    container_name: assetflow-frontend
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      # Runtime override (server-side fetch inside middleware/RSC)
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend:5000/api}
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

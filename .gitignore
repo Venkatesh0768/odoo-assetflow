@@ -1,0 +1,10 @@
+# Root-level ignores
+.env
+
+# Docker build cache artifacts
+**/node_modules
+**/.next
+
+# IDE
+.vscode
+*.log
