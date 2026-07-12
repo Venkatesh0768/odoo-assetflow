@@ -1,270 +1,987 @@
 {
   "info": {
-    "name": "Odoo Backend Practice API",
-    "description": "Auto-generated Postman collection for the Node.js backend. Includes automated scripts for access token injection and user ID management.",
+    "name": "AssetFlow Enterprise API",
+    "description": "Complete Postman collection for AssetFlow — covers Auth, Users, Departments, Categories, Assets, Allocations, Transfers, Bookings, Maintenance, Audit Cycles, Reports, and Notifications. Auto-scripts inject tokens and IDs between requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5000/api",
-      "type": "string"
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "userId",
-      "value": "",
-      "type": "string"
-    }
+    { "key": "baseUrl",          "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "accessToken",      "value": "", "type": "string" },
+    { "key": "userId",           "value": "", "type": "string" },
+    { "key": "targetUserId",     "value": "", "type": "string" },
+    { "key": "departmentId",     "value": "", "type": "string" },
+    { "key": "categoryId",       "value": "", "type": "string" },
+    { "key": "assetId",          "value": "", "type": "string" },
+    { "key": "allocationId",     "value": "", "type": "string" },
+    { "key": "transferId",       "value": "", "type": "string" },
+    { "key": "bookingId",        "value": "", "type": "string" },
+    { "key": "maintenanceId",    "value": "", "type": "string" },
+    { "key": "auditCycleId",     "value": "", "type": "string" },
+    { "key": "auditItemId",      "value": "", "type": "string" },
+    { "key": "notificationId",   "value": "", "type": "string" }
   ],
   "item": [
     {
-      "name": "Health Check",
+      "name": "🏥 Health Check",
       "request": {
         "method": "GET",
         "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/health",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "health"
-          ]
-        }
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
       },
       "response": []
     },
     {
-      "name": "Auth",
+      "name": "🔐 Auth",
       "item": [
         {
-          "name": "Register",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data) {",
-                  "    if (jsonData.data.accessToken) pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
-                  "    if (jsonData.data.user && jsonData.data.user.id) pm.collectionVariables.set(\"userId\", jsonData.data.user.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Register (creates Employee account)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) {",
+            "  pm.collectionVariables.set('accessToken', d.data.accessToken || '');",
+            "  if (d.data.user) pm.collectionVariables.set('userId', d.data.user.id || '');",
+            "}"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John Employee\",\n  \"email\": \"john.employee@assetflow.com\",\n  \"password\": \"Password123!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
           },
           "response": []
         },
         {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data) {",
-                  "    if (jsonData.data.accessToken) pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
-                  "    if (jsonData.data.user && jsonData.data.user.id) pm.collectionVariables.set(\"userId\", jsonData.data.user.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Login as Admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) {",
+            "  pm.collectionVariables.set('accessToken', d.data.accessToken || '');",
+            "  if (d.data.user) pm.collectionVariables.set('userId', d.data.user.id || '');",
+            "}"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@odoo.com\",\n  \"password\": \"admin1234\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Employee",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) {",
+            "  pm.collectionVariables.set('accessToken', d.data.accessToken || '');",
+            "  if (d.data.user) pm.collectionVariables.set('userId', d.data.user.id || '');",
+            "}"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john.employee@assetflow.com\",\n  \"password\": \"Password123!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
           },
           "response": []
         },
         {
           "name": "Refresh Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data) {",
-                  "    if (jsonData.data.accessToken) pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
-                  "    if (jsonData.data.user && jsonData.data.user.id) pm.collectionVariables.set(\"userId\", jsonData.data.user.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('accessToken', d.data.accessToken || '');"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/refresh",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "refresh"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth","refresh"] }
           },
           "response": []
         },
         {
           "name": "Get Current User (Me)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth","me"] }
           },
           "response": []
         },
         {
           "name": "Logout",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.collectionVariables.set(\"accessToken\", \"\");",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "if (pm.response.code === 200) pm.collectionVariables.set('accessToken', '');"
+          ]}}],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "POST",
             "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth","logout"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Devices",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "if (pm.response.code === 200) pm.collectionVariables.set('accessToken', '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout-all", "host": ["{{baseUrl}}"], "path": ["auth","logout-all"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 Users (Employee Directory)",
+      "item": [
+        {
+          "name": "Get All Users / Employee Directory",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/auth/logout",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
+              "raw": "{{baseUrl}}/users?limit=20&offset=0",
+              "host": ["{{baseUrl}}"], "path": ["users"],
+              "query": [{ "key": "limit", "value": "20" }, { "key": "offset", "value": "0" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{targetUserId}}", "host": ["{{baseUrl}}"], "path": ["users","{{targetUserId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"+91-9876543210\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Promote User Role (Admin only)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"asset_manager\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{targetUserId}}/promote", "host": ["{{baseUrl}}"], "path": ["users","{{targetUserId}}","promote"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle User Active Status (Admin only)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"is_active\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{targetUserId}}/status", "host": ["{{baseUrl}}"], "path": ["users","{{targetUserId}}","status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (Admin only)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{targetUserId}}", "host": ["{{baseUrl}}"], "path": ["users","{{targetUserId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏢 Departments (Org Setup)",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/departments", "host": ["{{baseUrl}}"], "path": ["departments"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Department By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/departments/{{departmentId}}", "host": ["{{baseUrl}}"], "path": ["departments","{{departmentId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('departmentId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Product engineering team\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/departments", "host": ["{{baseUrl}}"], "path": ["departments"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department with Parent (Admin)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Field Ops (East)\",\n  \"description\": \"Eastern field operations\",\n  \"parent_id\": \"{{departmentId}}\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/departments", "host": ["{{baseUrl}}"], "path": ["departments"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Department (Admin)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Engineering Updated\",\n  \"head_id\": \"{{targetUserId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/departments/{{departmentId}}", "host": ["{{baseUrl}}"], "path": ["departments","{{departmentId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Department (Admin)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/departments/{{departmentId}}/deactivate", "host": ["{{baseUrl}}"], "path": ["departments","{{departmentId}}","deactivate"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Department (Admin)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/departments/{{departmentId}}/activate", "host": ["{{baseUrl}}"], "path": ["departments","{{departmentId}}","activate"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🗂️ Asset Categories (Org Setup)",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["categories","{{categoryId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category – Electronics (Admin/AM)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('categoryId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Laptops, projectors, monitors etc.\",\n  \"custom_fields\": [\n    { \"label\": \"Warranty Period (months)\", \"type\": \"number\" },\n    { \"label\": \"Brand\", \"type\": \"text\" }\n  ],\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category – Furniture (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Furniture\",\n  \"description\": \"Desks, chairs, cabinets\",\n  \"custom_fields\": [],\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics & IT\",\n  \"custom_fields\": [\n    { \"label\": \"Warranty Period (months)\", \"type\": \"number\" },\n    { \"label\": \"Brand\", \"type\": \"text\" },\n    { \"label\": \"Model Number\", \"type\": \"text\" }\n  ]\n}" },
+            "url": { "raw": "{{baseUrl}}/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["categories","{{categoryId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📦 Assets (Registration & Directory)",
+      "item": [
+        {
+          "name": "Get All Assets (with filters)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assets?limit=20&offset=0",
+              "host": ["{{baseUrl}}"], "path": ["assets"],
+              "query": [
+                { "key": "limit",    "value": "20" },
+                { "key": "offset",   "value": "0" },
+                { "key": "status",   "value": "available", "disabled": true },
+                { "key": "category", "value": "{{categoryId}}", "disabled": true },
+                { "key": "search",   "value": "AF-0001", "disabled": true },
+                { "key": "location", "value": "HQ floor 2", "disabled": true }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Logout All Devices",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.collectionVariables.set(\"accessToken\", \"\");",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Get Asset By ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/assets/{{assetId}}", "host": ["{{baseUrl}}"], "path": ["assets","{{assetId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Asset History (allocations + maintenance)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/assets/{{assetId}}/history", "host": ["{{baseUrl}}"], "path": ["assets","{{assetId}}","history"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Asset (Admin/AM)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('assetId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Dell Laptop XPS 15\",\n  \"category_id\": \"{{categoryId}}\",\n  \"serial_number\": \"SN-DELL-001\",\n  \"acquisition_date\": \"2024-01-15\",\n  \"acquisition_cost\": 85000,\n  \"condition\": \"excellent\",\n  \"location\": \"HQ Floor 2 - Desk E12\",\n  \"department_id\": \"{{departmentId}}\",\n  \"is_bookable\": false,\n  \"notes\": \"Assigned to engineering pool\",\n  \"custom_fields\": { \"warranty_months\": 24, \"brand\": \"Dell\" }\n}" },
+            "url": { "raw": "{{baseUrl}}/assets", "host": ["{{baseUrl}}"], "path": ["assets"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Bookable Asset – Conference Room (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Conference Room B2\",\n  \"category_id\": \"{{categoryId}}\",\n  \"serial_number\": null,\n  \"acquisition_date\": \"2020-01-01\",\n  \"condition\": \"good\",\n  \"location\": \"HQ Building B - Floor 2\",\n  \"department_id\": \"{{departmentId}}\",\n  \"is_bookable\": true,\n  \"notes\": \"10-person capacity, projector included\"\n}" },
+            "url": { "raw": "{{baseUrl}}/assets", "host": ["{{baseUrl}}"], "path": ["assets"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Asset (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"condition\": \"good\",\n  \"location\": \"Warehouse A\",\n  \"notes\": \"Moved to warehouse for storage\"\n}" },
+            "url": { "raw": "{{baseUrl}}/assets/{{assetId}}", "host": ["{{baseUrl}}"], "path": ["assets","{{assetId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Asset Status (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"retired\"\n}" },
+            "url": { "raw": "{{baseUrl}}/assets/{{assetId}}/status", "host": ["{{baseUrl}}"], "path": ["assets","{{assetId}}","status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Asset Status – Available (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"available\"\n}" },
+            "url": { "raw": "{{baseUrl}}/assets/{{assetId}}/status", "host": ["{{baseUrl}}"], "path": ["assets","{{assetId}}","status"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔄 Allocations & Transfers",
+      "item": [
+        {
+          "name": "Get All Allocations",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/allocations", "host": ["{{baseUrl}}"], "path": ["allocations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Allocation By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/allocations/{{allocationId}}", "host": ["{{baseUrl}}"], "path": ["allocations","{{allocationId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Allocate Asset to User (Admin/AM/DH)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('allocationId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"allocated_to_user\": \"{{targetUserId}}\",\n  \"expected_return_date\": \"2026-12-31\"\n}" },
+            "url": { "raw": "{{baseUrl}}/allocations", "host": ["{{baseUrl}}"], "path": ["allocations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Allocate Asset to Department (Admin/AM/DH)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"allocated_to_dept\": \"{{departmentId}}\",\n  \"expected_return_date\": \"2026-12-31\"\n}" },
+            "url": { "raw": "{{baseUrl}}/allocations", "host": ["{{baseUrl}}"], "path": ["allocations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Return Asset (Admin/AM/DH) – with condition notes",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"condition_on_return\": \"good\",\n  \"return_notes\": \"Minor scratch on lid, otherwise working fine\"\n}" },
+            "url": { "raw": "{{baseUrl}}/allocations/{{allocationId}}/return", "host": ["{{baseUrl}}"], "path": ["allocations","{{allocationId}}","return"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Transfer Requests",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/allocations/transfers/all", "host": ["{{baseUrl}}"], "path": ["allocations","transfers","all"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transfer Request By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/allocations/transfers/{{transferId}}", "host": ["{{baseUrl}}"], "path": ["allocations","transfers","{{transferId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Asset Transfer (blocked double-alloc scenario)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('transferId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"to_user\": \"{{targetUserId}}\",\n  \"reason\": \"Project reassignment – new team member needs this laptop\"\n}" },
+            "url": { "raw": "{{baseUrl}}/allocations/transfers", "host": ["{{baseUrl}}"], "path": ["allocations","transfers"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Transfer (Admin/AM/DH)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/allocations/transfers/{{transferId}}/approve", "host": ["{{baseUrl}}"], "path": ["allocations","transfers","{{transferId}}","approve"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Transfer (Admin/AM/DH)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"rejection_reason\": \"Asset is needed in current department for another 2 weeks\"\n}" },
+            "url": { "raw": "{{baseUrl}}/allocations/transfers/{{transferId}}/reject", "host": ["{{baseUrl}}"], "path": ["allocations","transfers","{{transferId}}","reject"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📅 Resource Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/bookings", "host": ["{{baseUrl}}"], "path": ["bookings"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/bookings/{{bookingId}}", "host": ["{{baseUrl}}"], "path": ["bookings","{{bookingId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Resource Calendar (existing bookings view)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/bookings/calendar/{{assetId}}", "host": ["{{baseUrl}}"], "path": ["bookings","calendar","{{assetId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Book a Resource Slot (valid – no overlap)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('bookingId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"start_time\": \"2026-07-15T09:00:00.000Z\",\n  \"end_time\":   \"2026-07-15T10:00:00.000Z\",\n  \"purpose\": \"Procurement Team Sprint Review\",\n  \"department_id\": \"{{departmentId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/bookings", "host": ["{{baseUrl}}"], "path": ["bookings"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Book a Resource Slot (conflict test – 9:30–10:30 overlaps 9–10)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"start_time\": \"2026-07-15T09:30:00.000Z\",\n  \"end_time\":   \"2026-07-15T10:30:00.000Z\",\n  \"purpose\": \"This should be rejected – overlapping slot\"\n}" },
+            "url": { "raw": "{{baseUrl}}/bookings", "host": ["{{baseUrl}}"], "path": ["bookings"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Book a Resource Slot (valid – starts right after previous: 10:00–11:00)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"start_time\": \"2026-07-15T10:00:00.000Z\",\n  \"end_time\":   \"2026-07-15T11:00:00.000Z\",\n  \"purpose\": \"This should succeed – starts right after previous\"\n}" },
+            "url": { "raw": "{{baseUrl}}/bookings", "host": ["{{baseUrl}}"], "path": ["bookings"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule Booking",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"start_time\": \"2026-07-15T14:00:00.000Z\",\n  \"end_time\":   \"2026-07-15T15:00:00.000Z\",\n  \"purpose\": \"Rescheduled to afternoon slot\"\n}" },
+            "url": { "raw": "{{baseUrl}}/bookings/{{bookingId}}/reschedule", "host": ["{{baseUrl}}"], "path": ["bookings","{{bookingId}}","reschedule"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cancellation_reason\": \"Meeting postponed indefinitely\"\n}" },
+            "url": { "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel", "host": ["{{baseUrl}}"], "path": ["bookings","{{bookingId}}","cancel"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔧 Maintenance Management",
+      "item": [
+        {
+          "name": "Get All Maintenance Requests",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/maintenance", "host": ["{{baseUrl}}"], "path": ["maintenance"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Maintenance Request By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Raise Maintenance Request (any authenticated user)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('maintenanceId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"asset_id\": \"{{assetId}}\",\n  \"issue_description\": \"Projector bulb not turning on. Screen is completely blank on startup.\",\n  \"priority\": \"high\"\n}" },
+            "url": { "raw": "{{baseUrl}}/maintenance", "host": ["{{baseUrl}}"], "path": ["maintenance"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Maintenance Request (Admin/AM) – asset → Under Maintenance",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estimated_cost\": 3500\n}" },
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}/approve", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}","approve"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Maintenance Request (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"rejection_reason\": \"Asset is under warranty – vendor to be contacted instead\"\n}" },
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}/reject", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}","reject"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Technician (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"technician_id\": \"{{targetUserId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}/assign-technician", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}","assign-technician"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Start Maintenance Work (Admin/AM) – status → In Progress",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}/start", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}","start"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Maintenance (Admin/AM) – asset → Available",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"resolution_notes\": \"Replaced projector bulb. Tested for 30 mins – fully functional.\",\n  \"actual_cost\": 3200\n}" },
+            "url": { "raw": "{{baseUrl}}/maintenance/{{maintenanceId}}/resolve", "host": ["{{baseUrl}}"], "path": ["maintenance","{{maintenanceId}}","resolve"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔍 Audit Cycles",
+      "item": [
+        {
+          "name": "Get All Audit Cycles",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits", "host": ["{{baseUrl}}"], "path": ["audits"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Cycle By ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Audit Cycle – Department Scope (Admin/AM)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var d = pm.response.json();",
+            "if (d.success && d.data) pm.collectionVariables.set('auditCycleId', d.data.id || '');"
+          ]}}],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Q3 Audit – Engineering Dept\",\n  \"scope_type\": \"department\",\n  \"scope_department_id\": \"{{departmentId}}\",\n  \"start_date\": \"2026-07-01\",\n  \"end_date\": \"2026-07-15\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits", "host": ["{{baseUrl}}"], "path": ["audits"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Audit Cycle – Location Scope (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Annual HQ Floor 2 Audit\",\n  \"scope_type\": \"location\",\n  \"scope_location\": \"HQ Floor 2\",\n  \"start_date\": \"2026-07-01\",\n  \"end_date\": \"2026-07-31\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits", "host": ["{{baseUrl}}"], "path": ["audits"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Auditor to Cycle (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"auditor_id\": \"{{targetUserId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/auditors", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","auditors"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Auditor from Cycle (Admin/AM)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/auditors/{{targetUserId}}", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","auditors","{{targetUserId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Items for Cycle",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/items", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","items"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Audit Item – Verified",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"verification_status\": \"verified\",\n  \"notes\": \"Found at Desk E12 – confirmed with employee\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/items/{{auditItemId}}", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","items","{{auditItemId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Audit Item – Missing",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"verification_status\": \"missing\",\n  \"notes\": \"Not found at registered location or with assigned employee\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/items/{{auditItemId}}", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","items","{{auditItemId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Audit Item – Damaged",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"verification_status\": \"damaged\",\n  \"notes\": \"Screen cracked, keyboard not responding\"\n}" },
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/items/{{auditItemId}}", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","items","{{auditItemId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Discrepancy Report for Cycle",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/discrepancy-report", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","discrepancy-report"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Close Audit Cycle (Admin/AM) – locks cycle + updates asset statuses",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/audits/{{auditCycleId}}/close", "host": ["{{baseUrl}}"], "path": ["audits","{{auditCycleId}}","close"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Reports & Analytics",
+      "item": [
+        {
+          "name": "Asset Utilization Trends",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/auth/logout-all",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "logout-all"
-              ]
+              "raw": "{{baseUrl}}/reports/utilization-trends?days=30",
+              "host": ["{{baseUrl}}"], "path": ["reports","utilization-trends"],
+              "query": [{ "key": "days", "value": "30" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Maintenance Frequency by Asset/Category",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/maintenance-frequency?days=90",
+              "host": ["{{baseUrl}}"], "path": ["reports","maintenance-frequency"],
+              "query": [{ "key": "days", "value": "90" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assets Due for Maintenance / Nearing Retirement",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/reports/maintenance-due", "host": ["{{baseUrl}}"], "path": ["reports","maintenance-due"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Department-wise Allocation Summary",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/reports/department-allocation", "host": ["{{baseUrl}}"], "path": ["reports","department-allocation"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Resource Booking Heatmap (peak usage windows)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/booking-heatmap?days=30",
+              "host": ["{{baseUrl}}"], "path": ["reports","booking-heatmap"],
+              "query": [{ "key": "days", "value": "30" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Asset Usage – Most Used vs Idle Assets",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/asset-usage?idle_days=45",
+              "host": ["{{baseUrl}}"], "path": ["reports","asset-usage"],
+              "query": [{ "key": "idle_days", "value": "45" }]
             }
           },
           "response": []
@@ -272,124 +989,58 @@
       ]
     },
     {
-      "name": "Users",
+      "name": "🔔 Notifications & Activity Log",
       "item": [
         {
-          "name": "Get All Users (Admin)",
+          "name": "Get My Notifications",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
+            "url": { "raw": "{{baseUrl}}/notifications", "host": ["{{baseUrl}}"], "path": ["notifications"] }
           },
           "response": []
         },
         {
-          "name": "Get User By ID",
+          "name": "Mark Single Notification as Read",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "{{userId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "{{userId}}"
-              ]
-            }
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["notifications","{{notificationId}}","read"] }
           },
           "response": []
         },
         {
-          "name": "Delete User (Admin)",
+          "name": "Mark All Notifications as Read",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["notifications","read-all"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
             "method": "DELETE",
             "header": [],
+            "url": { "raw": "{{baseUrl}}/notifications/{{notificationId}}", "host": ["{{baseUrl}}"], "path": ["notifications","{{notificationId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Activity Log (Admin/AM only)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "{{userId}}"
-              ]
+              "raw": "{{baseUrl}}/notifications/activity-log?limit=50&offset=0",
+              "host": ["{{baseUrl}}"], "path": ["notifications","activity-log"],
+              "query": [{ "key": "limit", "value": "50" }, { "key": "offset", "value": "0" }]
             }
           },
           "response": []
