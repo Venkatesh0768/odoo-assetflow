@@ -869,6 +869,21 @@ export async function closeAuditCycle(
 
 // ─── Reports ───────────────────────────────────────────────────────────────────
 
+export interface ReportSummary {
+  assets: {
+    total: number; available: number; allocated: number;
+    under_maintenance: number; retired: number; utilization_rate: number;
+  };
+  maintenance: { pending: number; in_progress: number };
+  active_bookings: number;
+}
+
+export async function getReportSummary(
+  token: string
+): Promise<ApiResponse<ReportSummary>> {
+  return request<ReportSummary>("/reports/summary", {}, token);
+}
+
 export async function getUtilizationTrends(
   token: string,
   days = 30
@@ -883,8 +898,8 @@ export async function getUtilizationTrends(
 export async function getMaintenanceFrequency(
   token: string,
   days = 90
-): Promise<ApiResponse<MaintenanceFrequency[]>> {
-  return request<MaintenanceFrequency[]>(
+): Promise<ApiResponse<{ by_asset: MaintenanceFrequency[]; by_category: { category_name: string; total_requests: number; resolved: number }[] }>> {
+  return request<{ by_asset: MaintenanceFrequency[]; by_category: { category_name: string; total_requests: number; resolved: number }[] }>(
     `/reports/maintenance-frequency?days=${days}`,
     {},
     token

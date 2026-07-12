@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate);
 router.use(authorize('admin', 'asset_manager', 'department_head'));
 
+router.get('/summary',                 ReportController.summary);
 router.get('/utilization-trends',      ReportController.utilizationTrends);
 router.get('/maintenance-frequency',   ReportController.maintenanceFrequency);
 router.get('/maintenance-due',         ReportController.maintenanceDue);

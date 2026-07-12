@@ -274,10 +274,13 @@ export interface UtilizationTrend {
 }
 
 export interface MaintenanceFrequency {
-  asset_id: string;
+  asset_id?: string;
+  asset_tag?: string;
   asset_name?: string;
   category?: string;
-  count: number;
+  total_requests: number;
+  resolved?: number;
+  avg_resolution_hours?: number;
 }
 
 export interface MaintenanceDueItem {
@@ -296,9 +299,13 @@ export interface DepartmentAllocationSummary {
 }
 
 export interface BookingHeatmapEntry {
+  day: number;
   hour: number;
-  day: string;
   count: number;
+  // backend returns day_of_week / hour_of_day aliases
+  day_of_week?: number;
+  hour_of_day?: number;
+  booking_count?: number;
 }
 
 export interface AssetUsageEntry {
